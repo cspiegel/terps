@@ -33,9 +33,13 @@
 #include "prototypes.h"
 
 #ifndef GARGLK
+#include <glk.h>
+#define gli_strict_warning(x) ((void)0)
+#if 0
 #include "glkterm/gi_blorb.h"
 #include "glkterm/glk.h"
 #include "Gargoyle/garglk.h"
+#endif
 #endif
 
 int convert_to_utf32 (unsigned char *text);

@@ -150,7 +150,9 @@ strid_t startup_open(const char *name)
     set_game_filename(name);
     s = strrchr(name, '\\');
     if (!s) s = strrchr(name, '/');
+#ifdef GARGLK
     garglk_set_story_name(s ? s + 1 : name);
+#endif
   } else {
     char *path = search_path;
     if(path) {
@@ -167,7 +169,9 @@ strid_t startup_open(const char *name)
 	  set_game_filename(newname);
 	  s = strrchr(newname, '\\');
 	  if (!s) s = strrchr(newname, '/');
+#ifdef GARGLK
 	  garglk_set_story_name(s ? s + 1 : newname);
+#endif
 	  break;
         }
       }
@@ -602,10 +606,12 @@ int glkunix_startup_code(glkunix_startup_t *data)
 {
   set_defaults();
 
+#ifdef GARGLK
 	garglk_set_program_name("Nitfol 0.5");
 	garglk_set_program_info(
 		"Nitfol 0.5 by Evin Robertson\n"
 		"With countless patches by other people.\n");
+#endif
 
   return parse_commands(data->argc, data->argv);
 }
