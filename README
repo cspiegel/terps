@@ -1,0 +1,22 @@
+To build, extract the desired Glk implementation into the top level directory.
+The Glk implementation must have its own copy of CMakeLists.txt which exports a
+target called “glk” which represents the Glk library. CMakeLists.txt files are
+provided for the following Glk implementations:
+
+cheapglk
+glkterm
+glktermw
+remglk
+xglk
+
+These are all avaialble from http://www.eblong.com/zarf/glk/
+
+CMake is used to build the interpreters. Set the GLK variable to whichever Glk
+implementation you would like to build against, e.g.:
+
+$ mkdir build
+$ cd build
+$ cmake .. -DGLK=glktermw
+$ make
+
+This will build both the Glk implementation and all included interpreters.
