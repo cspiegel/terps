@@ -12,8 +12,10 @@
 
 #include "glk.h"
 #include "glkstart.h"
+#include "header.h"
 
 char *gas_filename = NULL;
+strid_t gas_file;
 
 glkunix_argumentlist_t glkunix_arguments[] = {
 	{ "", glkunix_arg_ValueFollows, "filename: The game file to load." },
@@ -24,6 +26,8 @@ int glkunix_startup_code(glkunix_startup_t *data)
 {
 	if (data->argc == 2)
 		gas_filename = data->argv[1];
+
+	gas_file = glkunix_stream_open_pathname(gas_filename, 0, SOURCEFILE);
     return TRUE;
 }
 

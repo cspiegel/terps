@@ -24,14 +24,13 @@ winid_t window;
 strid_t screen;
 
 extern char *gas_filename;
+extern strid_t gas_file;
 
 /* main - the main routine */
 void glk_main()
 {
     char *fname,*lname;
     int rows,cols;
-
-	strid_t file;
 
 	window = glk_window_open(0, 0, 0, wintype_TextBuffer, WINDOW);
 	screen = glk_window_get_stream(window);
@@ -63,16 +62,17 @@ void glk_main()
     /* initialize terminal i/o */
     trm_init(rows,cols,lname);
 
-	/* Get the file reference. */
-	if (!gas_filename)
-		error("AdvSys: No file given");
+    /* Get the file reference. */
+    if (!gas_filename)
+	error("AdvSys: No file given");
 
-	file = glkunix_stream_open_pathname(gas_filename, 0, SOURCEFILE);
+    if (!gas_file)
+	error("AdvSys: Cannot open file");
 
 /* END OF CHANGES FOR GLK */
 
     /* initialize the database */
-    db_init(file);
+    db_init(gas_file);
 
     /* play the game */
     play();
