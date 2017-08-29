@@ -4,7 +4,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 include(Compilers)
 
+# Enable LTO support in CMake 3.9 and newer.
+if(POLICY CMP0069)
+  cmake_policy(SET CMP0069 NEW)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT HAS_LTO)
+endif()
+
 set(GLK "glktermw" CACHE STRING "The Glk implementation to build against.")
+option(ENABLE_LTO "Enable link-time optimization." ON)
 
 add_subdirectory(${GLK})
 
