@@ -1,0 +1,13 @@
+.*.swp
+cheapglk/*
+!cheapglk/CMakeLists.txt
+glkterm/*
+!glkterm/CMakeLists.txt
+glktermw/*
+!glktermw/CMakeLists.txt
+nanoglk/*
+!nanoglk/CMakeLists.txt
+remglk/*
+!remglk/CMakeLists.txt
+xglk/*
+!xglk/CMakeLists.txt
