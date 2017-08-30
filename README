@@ -10,7 +10,9 @@ remglk
 xglk
 nanoglk
 
-These are all avaialble from http://www.eblong.com/zarf/glk/
+These are all avaialble from http://www.eblong.com/zarf/glk/ with the exception
+of nanoglk which is available from
+http://www.ifarchive.org/indexes/if-archiveXprogrammingXglkXimplementations.html.
 
 CMake is used to build the interpreters. Set the GLK variable to whichever Glk
 implementation you would like to build against, e.g.:
