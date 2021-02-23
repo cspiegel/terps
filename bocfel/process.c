@@ -19,9 +19,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <setjmp.h>
 
-#ifdef ZTERP_GLK
+#ifdef ZTERP_GLK_TICK
 #include <glk.h>
 #endif
 
@@ -30,7 +31,6 @@
 #include "dict.h"
 #include "math.h"
 #include "memory.h"
-#include "meta.h"
 #include "objects.h"
 #include "random.h"
 #include "screen.h"
@@ -57,7 +57,7 @@ static size_t njumps;
  */
 static size_t ilevel = -1;
 
-int in_interrupt(void)
+bool in_interrupt(void)
 {
   return ilevel > 0;
 }
@@ -75,10 +75,10 @@ void interrupt_return(void)
  * restoring and restarting in case these happen while in an interrupt.
  */
 znoreturn
-void interrupt_reset(void)
+void interrupt_reset(bool call_zread)
 {
   ilevel = 0;
-  longjmp(jumps[0], 2);
+  longjmp(jumps[0], call_zread ? 2 : 3);
 }
 
 /* Jump back to the first round of processing, but tell it to
@@ -90,26 +90,26 @@ void interrupt_quit(void)
   longjmp(jumps[0], 1);
 }
 
-/* Returns 1 if decoded, 0 otherwise (omitted) */
-static int decode_base(uint8_t type, uint16_t *loc)
+/* Returns true if decoded, false otherwise (omitted) */
+static bool decode_base(uint8_t type, uint16_t *loc)
 {
   switch(type)
   {
     case 0: /* Large constant. */
-      *loc = WORD(pc);
+      *loc = word(pc);
       pc += 2;
       break;
     case 1: /* Small constant. */
-      *loc = BYTE(pc++);
+      *loc = byte(pc++);
       break;
     case 2: /* Variable. */
-      *loc = variable(BYTE(pc++));
+      *loc = variable(byte(pc++));
       break;
     default: /* Omitted. */
-      return 0;
+      return false;
   }
 
-  return 1;
+  return true;
 }
 
 static void decode_var(uint8_t types)
@@ -133,9 +133,9 @@ enum opcount { ZERO, ONE, TWO, VAR, EXT };
 /* This nifty trick is from Frotz. */
 static void zextended(void)
 {
-  uint8_t opnumber = BYTE(pc++);
+  uint8_t opnumber = byte(pc++);
 
-  decode_var(BYTE(pc++));
+  decode_var(byte(pc++));
 
   extended_call(opnumber);
 }
@@ -200,7 +200,6 @@ void setup_opcodes(void)
   setup_single_opcode(1, 6, ZERO, 0x0a, zquit);
   setup_single_opcode(1, 6, ZERO, 0x0b, znew_line);
   setup_single_opcode(3, 3, ZERO, 0x0c, zshow_status);
-  setup_single_opcode(4, 6, ZERO, 0x0c, znop); /* §15: Technically illegal in V4+, but a V5 Wishbringer accidentally uses this opcode. */
   setup_single_opcode(3, 6, ZERO, 0x0d, zverify);
   setup_single_opcode(5, 6, ZERO, 0x0e, zextended);
   setup_single_opcode(5, 6, ZERO, 0x0f, zpiracy);
@@ -331,33 +330,41 @@ void process_instructions(void)
 
   switch(setjmp(jumps[ilevel]))
   {
-    case 1: /* Normal break from interrupt. */
+    /* Normal break from interrupt. */
+    case 1:
       return;
-    case 2: /* Special break: interrupt_reset() called, so keep interpreting. */
+    /* Special break: interrupt_reset(true) called, so keep interpreting
+     * after re-executing a @read due to an interpreter restore.
+     */
+    case 2:
+      zread();
+      break;
+    /* Special break: interrupt_reset(false) called, so keep interpreting. */
+    case 3:
       break;
   }
 
-  while(1)
+  while(true)
   {
     uint8_t opcode;
 
-#if defined(ZTERP_GLK) && defined(ZTERP_GLK_TICK)
+#ifdef ZTERP_GLK_TICK
     glk_tick();
 #endif
 
     current_instruction = pc;
-    opcode = BYTE(pc++);
+    opcode = byte(pc++);
 
     /* long 2OP */
     if(opcode < 0x80)
     {
       znargs = 2;
 
-      if(opcode & 0x40) zargs[0] = variable(BYTE(pc++));
-      else              zargs[0] = BYTE(pc++);
+      if(opcode & 0x40) zargs[0] = variable(byte(pc++));
+      else              zargs[0] = byte(pc++);
 
-      if(opcode & 0x20) zargs[1] = variable(BYTE(pc++));
-      else              zargs[1] = BYTE(pc++);
+      if(opcode & 0x20) zargs[1] = variable(byte(pc++));
+      else              zargs[1] = byte(pc++);
     }
 
     /* short 1OP */
@@ -367,15 +374,15 @@ void process_instructions(void)
 
       if(opcode & 0x20) /* variable */
       {
-        zargs[0] = variable(BYTE(pc++));
+        zargs[0] = variable(byte(pc++));
       }
       else if(opcode & 0x10) /* small constant */
       {
-        zargs[0] = BYTE(pc++);
+        zargs[0] = byte(pc++);
       }
       else /* large constant */
       {
-        zargs[0] = WORD(pc);
+        zargs[0] = word(pc);
         pc += 2;
       }
     }
@@ -386,14 +393,6 @@ void process_instructions(void)
       znargs = 0;
     }
 
-    /* variable 2OP */
-    else if(opcode < 0xe0)
-    {
-      znargs = 0;
-
-      decode_var(BYTE(pc++));
-    }
-
     /* Double variable VAR */
     else if(opcode == 0xec || opcode == 0xfa)
     {
@@ -401,18 +400,18 @@ void process_instructions(void)
 
       znargs = 0;
 
-      types1 = BYTE(pc++);
-      types2 = BYTE(pc++);
+      types1 = byte(pc++);
+      types2 = byte(pc++);
       decode_var(types1);
       decode_var(types2);
     }
 
-    /* variable VAR */
+    /* variable 2OP and VAR */
     else
     {
       znargs = 0;
 
-      decode_var(BYTE(pc++));
+      decode_var(byte(pc++));
     }
 
     op_call(opcode);

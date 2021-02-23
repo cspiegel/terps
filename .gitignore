@@ -11,3 +11,4 @@ remglk/*
 !remglk/CMakeLists.txt
 xglk/*
 !xglk/CMakeLists.txt
+build/*

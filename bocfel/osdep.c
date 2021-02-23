@@ -22,10 +22,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <limits.h>
 
 #include "osdep.h"
 #include "screen.h"
+#include "zterp.h"
 
 /* OS-specific functions should all be collected in this file for
  * convenience.  A sort of poor-man’s “reverse” inheritance is used: for
@@ -65,18 +67,18 @@
  * output, it should be done here.  This function is called once at
  * program startup.
  *
- * int zterp_os_have_style(int style)
+ * bool zterp_os_have_style(int style)
  *
  * This should return true if the provided style (see style.h for valid
  * STYLE_ values) is available.  It is safe to assume that styles will
  * not be combined; e.g. this will not be called as:
  * zterp_os_have_style(STYLE_BOLD | STYLE_ITALIC);
  *
- * int zterp_os_have_colors(void)
+ * bool zterp_os_have_colors(void)
  *
  * Returns true if the terminal supports colors.
  *
- * void zterp_os_set_style(int style, int fg, int bg)
+ * void zterp_os_set_style(int style, const struct color *fg, const struct color *bg)
  *
  * Set both a style and foreground/background color.  Any previous
  * settings should be ignored; for example, if the last call to
@@ -84,8 +86,9 @@
  * bold, the result should be bold, not bold italic.
  * Unlike in zterp_os_have_style(), here styles may be combined.  See
  * the Unix implementation for a reference.
- * The colors are Z-machine colors (see §8.3.1), with the following
- * note: the only color values that will ever be passed in are 1–9.
+ * The colors are pointers to “struct color”: see screen.h.
+ * This function will be called unconditionally, so implementations must
+ * ignore requests if they cannot be fulfilled.
  */
 
 /******************
@@ -132,7 +135,8 @@ void zterp_os_get_screen_size(unsigned *w, unsigned *h)
 
 static const char *ital = NULL, *rev = NULL, *bold = NULL, *none = NULL;
 static char *fg_string = NULL, *bg_string = NULL;
-static int have_colors = 0;
+static bool have_colors = false;
+static bool have_24bit_rgb = false;
 void zterp_os_init_term(void)
 {
   if(setupterm(NULL, STDOUT_FILENO, NULL) != OK) return;
@@ -148,29 +152,57 @@ void zterp_os_init_term(void)
   bg_string = tgetstr("AB", NULL);
 
   have_colors = none != NULL && fg_string != NULL && bg_string != NULL;
+
+  have_24bit_rgb = tigetflag("RGB") > 0 && tigetnum("colors") == 1U << 24;
 }
 #define zterp_os_init_term
 
-int zterp_os_have_style(int style)
+bool zterp_os_have_style(int style)
 {
-  if(none == NULL) return 0;
+  if(none == NULL) return false;
 
   if     (style == STYLE_ITALIC)  return ital != NULL;
   else if(style == STYLE_REVERSE) return rev  != NULL;
   else if(style == STYLE_BOLD)    return bold != NULL;
   else if(style == STYLE_NONE)    return none != NULL;
 
-  return 0;
+  return false;
 }
 #define zterp_os_have_style
 
-int zterp_os_have_colors(void)
+bool zterp_os_have_colors(void)
 {
   return have_colors;
 }
 #define zterp_os_have_colors
 
-void zterp_os_set_style(int style, int fg, int bg)
+static void set_color(const char *string, const struct color *color)
+{
+  switch(color->mode)
+  {
+    case ColorModeANSI:
+      if(color->value >= 2 && color->value <= 9) putp(tparm(string, color->value - 2));
+      break;
+    case ColorModeTrue:
+      if(have_24bit_rgb)
+      {
+        /* Presumably for compatibility, even on terminals capable of
+         * direct color, the values 0 to 7 are still treated as if on a
+         * 16-color terminal (1 is red, 2 is green, and so on). Any
+         * other value is treated as a 24-bit color in the expected
+         * fashion. If a value between 1 and 7 is chosen, round to 0
+         * (which is still black) or 8.
+         */
+        uint16_t transformed = color->value < 4 ? 0 :
+                               color->value < 8 ? 8 :
+                               color->value;
+        putp(tparm(string, screen_convert_color(transformed)));
+      }
+      break;
+  }
+}
+
+void zterp_os_set_style(int style, const struct color *fg, const struct color *bg)
 {
   /* If the terminal cannot be reset, nothing can be used. */
   if(none == NULL) return;
@@ -183,8 +215,8 @@ void zterp_os_set_style(int style, int fg, int bg)
 
   if(have_colors)
   {
-    if(fg > 1) putp(tparm(fg_string, fg - 2, 0, 0, 0, 0, 0, 0, 0, 0));
-    if(bg > 1) putp(tparm(bg_string, bg - 2, 0, 0, 0, 0, 0, 0, 0, 0));
+    set_color(fg_string, fg);
+    set_color(bg_string, bg);
   }
 }
 #define zterp_os_set_style
@@ -194,9 +226,15 @@ void zterp_os_set_style(int style, int fg, int bg)
  * Windows functions *
  *********************/
 #elif defined(ZTERP_WIN32)
+#include <windows.h>
+
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+
 void zterp_os_rcfile(char *s, size_t n)
 {
-  char *p;
+  const char *p;
 
   p = getenv("APPDATA");
   if(p == NULL) p = getenv("LOCALAPPDATA");
@@ -205,6 +243,65 @@ void zterp_os_rcfile(char *s, size_t n)
   snprintf(s, n, "%s\\bocfel.ini", p);
 }
 #define zterp_os_rcfile
+
+#ifndef ZTERP_GLK
+void zterp_os_get_screen_size(unsigned *w, unsigned *h)
+{
+  HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+  if(handle != INVALID_HANDLE_VALUE)
+  {
+    CONSOLE_SCREEN_BUFFER_INFO screen;
+    GetConsoleScreenBufferInfo(handle, &screen);
+
+    *w = screen.srWindow.Right - screen.srWindow.Left + 1;
+    *h = screen.srWindow.Bottom - screen.srWindow.Top + 1;
+  }
+}
+#define zterp_os_get_screen_size
+
+bool terminal_processing_enabled = false;
+void zterp_os_init_term(void)
+{
+  HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+  if(handle != INVALID_HANDLE_VALUE)
+  {
+    DWORD mode;
+    if(GetConsoleMode(handle, &mode))
+    {
+      mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+      terminal_processing_enabled = SetConsoleMode(handle, mode);
+    }
+  }
+}
+#define zterp_os_init_term
+
+bool zterp_os_have_style(int style)
+{
+  return terminal_processing_enabled;
+}
+#define zterp_os_have_style
+
+bool zterp_os_have_colors(void)
+{
+  return terminal_processing_enabled;
+}
+#define zterp_os_have_colors
+
+void zterp_os_set_style(int style, const struct color *fg, const struct color *bg)
+{
+  if(!terminal_processing_enabled) return;
+
+  printf("\33[0m");
+
+  if(style & STYLE_ITALIC)  printf("\33[4m");
+  if(style & STYLE_REVERSE) printf("\33[7m");
+  if(style & STYLE_BOLD)    printf("\33[1m");
+
+  if(fg->mode == ColorModeANSI) printf("\33[%dm", 28 + fg->value);
+  if(bg->mode == ColorModeANSI) printf("\33[%dm", 38 + bg->value);
+}
+#define zterp_os_set_style
+#endif
 
 #endif
 
@@ -242,21 +339,21 @@ void zterp_os_init_term(void)
 #endif
 
 #ifndef zterp_os_have_style
-int zterp_os_have_style(int style)
+bool zterp_os_have_style(int style)
 {
-  return 0;
+  return false;
 }
 #endif
 
 #ifndef zterp_os_have_colors
-int zterp_os_have_colors(void)
+bool zterp_os_have_colors(void)
 {
-  return 0;
+  return false;
 }
 #endif
 
 #ifndef zterp_os_set_style
-void zterp_os_set_style(int style, int fg, int bg)
+void zterp_os_set_style(int style, const struct color *fg, const struct color *bg)
 {
 }
 #endif
