@@ -79,6 +79,11 @@ endif()
 #   2) don't use glk file prompts (GLK_ANSI_ONLY)
 #   3) use garglk extension garglk_fileref_get_name (GARGLK)
 #
+set(AGILITY_MACROS GLK)
+if(!UNIX)
+  list(APPEND AGILITY_MACROS GLK_ANSI_ONLY)
+endif()
+
 if(WITH_AGILITY)
   terp(agility
        SRCS agility/agtread.c agility/gamedata.c agility/util.c
@@ -86,7 +91,7 @@ if(WITH_AGILITY)
        agility/exec.c agility/runverb.c agility/metacommand.c agility/savegame.c
        agility/debugcmd.c agility/agil.c agility/token.c agility/disassemble.c
        agility/object.c agility/interface.c agility/os_glk.c
-       MACROS GLK GLK_ANSI_ONLY)
+       MACROS ${AGILITY_MACROS})
 endif()
 
 # ------------------------------------------------------------------------------
