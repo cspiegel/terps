@@ -1,3 +1,5 @@
+// vim: set ft=c:
+
 #ifndef ZTERP_UTIL_H
 #define ZTERP_UTIL_H
 
@@ -27,7 +29,7 @@
  * alternative direct conversion method is included here for reference.
  */
 #if 1
-static inline int16_t as_signed(uint16_t n) { return n & 0x8000 ? (long)n - 0x10000L : n; }
+static inline int16_t as_signed(uint16_t n) { return (n & 0x8000) ? (long)n - 0x10000L : n; }
 #else
 static inline int16_t as_signed(uint16_t n) { return n; }
 #endif
@@ -36,7 +38,7 @@ static inline int16_t as_signed(uint16_t n) { return n; }
 zprintflike(1, 2)
 znoreturn
 void assert_fail(const char *, ...);
-#define ZASSERT(expr, ...) do { if(!(expr)) assert_fail(__VA_ARGS__); } while(0)
+#define ZASSERT(expr, ...)	do { if(!(expr)) assert_fail(__VA_ARGS__); } while(false)
 #else
 #define ZASSERT(expr, ...)	((void)0)
 #endif
@@ -64,6 +66,7 @@ void process_arguments(int, char **);
 #ifdef ZTERP_GLK
 #ifndef GLK_MODULE_UNICODE
 #define glk_put_char_uni(...)		die("bug %s:%d: glk_put_char_uni() called with no unicode", __FILE__, __LINE__)
+#define glk_put_char_stream_uni(...)	die("bug %s:%d: glk_put_char_stream_uni() called with no unicode", __FILE__, __LINE__)
 #define glk_request_char_event_uni(...)	die("bug %s:%d: glk_request_char_event_uni() called with no unicode", __FILE__, __LINE__)
 #define glk_request_line_event_uni(...)	die("bug %s:%d: glk_request_line_event_uni() called with no unicode", __FILE__, __LINE__)
 #endif

@@ -127,7 +127,7 @@ endif()
 
 # ------------------------------------------------------------------------------
 #
-# Bocfel 0.6.1
+# Bocfel 1.2.1
 #
 set(BOCFEL_MACROS ZTERP_GLK)
 if(UNIX)
@@ -140,7 +140,7 @@ if(WITH_BOCFEL)
   terp(bocfel
        SRCS bocfel/blorb.c bocfel/branch.c bocfel/dict.c bocfel/iff.c
        bocfel/io.c bocfel/math.c bocfel/meta.c bocfel/memory.c bocfel/objects.c
-       bocfel/osdep.c bocfel/process.c bocfel/random.c bocfel/screen.c
+       bocfel/osdep.c bocfel/patches.c bocfel/process.c bocfel/random.c bocfel/screen.c
        bocfel/sound.c bocfel/stack.c bocfel/unicode.c bocfel/util.c
        bocfel/zoom.c bocfel/zterp.c bocfel/glkstart.c
        MACROS ${BOCFEL_MACROS}

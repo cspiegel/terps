@@ -1,11 +1,10 @@
+// vim: set ft=c:
+
 #ifndef ZTERP_TABLES_H
 #define ZTERP_TABLES_H
 
 #include <stdint.h>
-
-#ifdef ZTERP_GLK
-#include <glk.h>
-#endif
+#include <stdbool.h>
 
 #define UNICODE_DELETE		8
 #define UNICODE_LINEFEED	10
@@ -14,6 +13,7 @@
 #define UNICODE_SPACE		32
 #define UNICODE_REPLACEMENT	65533
 
+#define LATIN1_LINEFEED		10
 #define LATIN1_QUESTIONMARK	63
 
 #define ZSCII_DELETE		8
@@ -51,15 +51,6 @@
 #define ZSCII_CLICK_DOUBLE	253
 #define ZSCII_CLICK_SINGLE	254
 
-/* This variable controls whether Unicode is used for screen
- * output.  This affects @check_unicode as well as the ZSCII to
- * Unicode table.  With Glk it is set based on whether the Glk
- * implementation supports Unicode (checked with the Unicode
- * gestalt), and determines whether Unicode IO functions should
- * be used; otherwise, it is kept in parallel with use_utf8_io.
- */
-extern int have_unicode;
-
 extern uint16_t zscii_to_unicode[];
 extern uint8_t unicode_to_zscii[];
 extern uint8_t unicode_to_zscii_q[];
@@ -71,11 +62,13 @@ void parse_unicode_table(uint16_t);
 void setup_tables(void);
 
 uint16_t unicode_tolower(uint16_t);
+#ifdef ZTERP_GLK
 uint16_t char_to_unicode(char);
+#endif
 
 /* Standard 1.1 notes that Unicode characters 0–31 and 127–159
  * are invalid due to the fact that they’re control codes.
  */
-static inline int valid_unicode(uint16_t c) { return (c >= 32 && c <= 126) || c >= 160; }
+static inline bool valid_unicode(uint16_t c) { return (c >= 32 && c <= 126) || c >= 160; }
 
 #endif
