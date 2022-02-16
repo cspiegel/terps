@@ -1,5 +1,5 @@
 option(WITH_TADS "Enable the tads interpreter." ON)
-
+set (CMAKE_CXX_STANDARD 11)
 if(WITH_TADS)
   include_directories(. tads2 tads3)
 
@@ -47,11 +47,15 @@ if(WITH_TADS)
   list(APPEND srcs tads3/vmconnom.cpp)
 
   set(macros GARGOYLE VMGLOB_STRUCT GLK_UNICODE GLK_TIMERS TC_TARGET_T3 RUNTIME)
+  if(LINUX)
+    list(APPEND macros GLK_ANSI_ONLY)
+  endif()
   if(MINGW32)
     list(APPEND macros DMSDOS DT_WIN32)
   endif()
 
   terp(tadsr
        SRCS ${srcs}
-       MACROS ${macros})
+       MACROS ${macros}
+       POSIX)
 endif()
