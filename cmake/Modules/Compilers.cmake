@@ -1,3 +1,15 @@
+function(c_standard target version)
+    set_property(TARGET ${target} PROPERTY C_STANDARD ${version})
+    set_property(TARGET ${target} PROPERTY C_STANDARD_REQUIRED ON)
+    set_property(TARGET ${target} PROPERTY C_EXTENSIONS OFF)
+endfunction()
+
+function(cxx_standard target version)
+    set_property(TARGET ${target} PROPERTY CXX_STANDARD ${version})
+    set_property(TARGET ${target} PROPERTY CXX_STANDARD_REQUIRED ON)
+    set_property(TARGET ${target} PROPERTY CXX_EXTENSIONS OFF)
+endfunction()
+
 function(c99 target)
   # CMake doesn't know how to set C99 mode for Intel or Sun.
   if("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")

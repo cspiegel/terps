@@ -1,5 +1,5 @@
 option(WITH_TADS "Enable the tads interpreter." ON)
-set (CMAKE_CXX_STANDARD 11)
+
 if(WITH_TADS)
   include_directories(. tads2 tads3)
 
@@ -57,5 +57,12 @@ if(WITH_TADS)
   terp(tadsr
        SRCS ${srcs}
        MACROS ${macros}
+       CXXSTD 11
        POSIX)
+  if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+       # This is a style choice in the code.
+       target_compile_options(tadsr PRIVATE "-Wno-logical-not-parentheses")
+  endif()
+
+  target_include_directories(tadsr PRIVATE . tads2 tads3)
 endif()
