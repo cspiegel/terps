@@ -57,7 +57,7 @@ if(WITH_TADS)
   terp(tadsr
        SRCS ${srcs}
        MACROS ${macros}
-       CXXSTD 11
+       CXXSTD
        POSIX)
   if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
        # This is a style choice in the code.

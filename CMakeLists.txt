@@ -34,7 +34,7 @@ option(WITH_SCARE "Enable the scare interpreter." ON)
 option(WITH_SCOTT "Enable the scott interpreter." ON)
 
 function(terp target)
-  set(options LTO MATH)
+  set(options C99 LTO MATH)
   set(oneval)
   set(multival SRCS INCLUDE_DIRS MACROS LIBS)
   cmake_parse_arguments(TERP "${options}" "${oneval}" "${multival}" ${ARGN})
@@ -66,8 +66,7 @@ if(WITH_ADVSYS)
   terp(advsys
        SRCS advsys/advmsg.c advsys/advtrm.c advsys/advprs.c
        advsys/advdbs.c advsys/advint.c advsys/advjunk.c advsys/advexe.c
-       advsys/glkstart.c
-       C99)
+       advsys/glkstart.c)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -92,8 +91,7 @@ if(WITH_AGILITY)
        agility/exec.c agility/runverb.c agility/metacommand.c agility/savegame.c
        agility/debugcmd.c agility/agil.c agility/token.c agility/disassemble.c
        agility/object.c agility/interface.c agility/os_glk.c
-       MACROS ${AGILITY_MACROS}
-       C99)
+       MACROS ${AGILITY_MACROS})
 endif()
 
 # ------------------------------------------------------------------------------
@@ -109,8 +107,7 @@ if(WITH_ALAN2)
        alan2/inter.c alan2/parse.c alan2/rules.c alan2/stack.c alan2/decode.c
        alan2/term.c alan2/reverse.c alan2/readline.c alan2/params.c
        alan2/sysdep.c alan2/glkstart.c alan2/glkio.c alan2/alan.version.c
-       MACROS GLK RESERVED
-       C99)
+       MACROS GLK RESERVED)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -131,8 +128,7 @@ if(WITH_ALAN3)
        alan3/stack.c alan3/state.c alan3/StateStack.c alan3/syntax.c alan3/sysdep.c 
        alan3/syserr.c alan3/term.c alan3/types.c alan3/utils.c 
        alan3/word.c
-       MACROS GLK HAVE_GLK BUILD=0
-       C99)
+       MACROS GLK HAVE_GLK BUILD=0)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -167,8 +163,7 @@ if(WITH_FROTZ)
        frotz/input.c frotz/main.c frotz/math.c frotz/object.c frotz/process.c
        frotz/quetzal.c frotz/random.c frotz/redirect.c frotz/sound.c
        frotz/stream.c frotz/table.c frotz/text.c frotz/variable.c
-       frotz/glkscreen.c frotz/glkmisc.c
-       C99)
+       frotz/glkscreen.c frotz/glkmisc.c)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -180,8 +175,7 @@ if(WITH_GEAS)
        SRCS geas/geasfile.cc geas/geas-runner.cc geas/geas-state.cc
        geas/geas-util.cc geas/geasglk.cc geas/geasglkterm.c geas/istring.cc
        geas/readfile.cc
-       MACROS USE_INLINE
-       C99)
+       MACROS USE_INLINE)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -196,8 +190,7 @@ terp(git
      git/peephole.c git/terp.c git/glkop.c git/search.c git/git_unix.c
      git/savefile.c git/saveundo.c git/gestalt.c git/heap.c git/accel.c
      MACROS USE_INLINE
-     MATH
-     C99)
+     MATH)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -217,8 +210,7 @@ if(WITH_GLULXE)
        glulxe/osdepend.c glulxe/unixstrt.c glulxe/accel.c glulxe/profile.c
        glulxe/float.c
        MACROS ${GLULXE_MACROS}
-       MATH
-       C99)
+       MATH)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -235,8 +227,7 @@ if(WITH_HUGO)
        hugo/source/heexpr.c hugo/source/heobject.c hugo/source/heres.c
        hugo/source/heset.c hugo/source/stringfn.c
        INCLUDE_DIRS hugo/source
-       MACROS GLK COMPILE_V25 NO_KEYPRESS_CURSOR "HUGO_INLINE=static inline"
-       C99)
+       MACROS GLK COMPILE_V25 NO_KEYPRESS_CURSOR "HUGO_INLINE=static inline")
 endif()
 
 # ------------------------------------------------------------------------------
@@ -250,8 +241,7 @@ if(WITH_JACL)
        jacl/display.c jacl/utils.c jacl/jpp.c jacl/resolvers.c jacl/errors.c
        jacl/encapsulate.c jacl/libcsv.c
        MACROS GLK
-       MATH
-       C99)
+       MATH)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -267,8 +257,7 @@ if(WITH_LEVEL9)
        INCLUDE_DIRS level9
        MACROS PRIVATE BITMAP_DECODER NEED_STRICMP_PROTOTYPE
        stricmp=gln_strcasecmp strnicmp=gln_strncasecmp
-       MATH
-       C99)
+       MATH)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -286,8 +275,7 @@ endif()
 if(WITH_MAGNETIC)
   terp(magnetic
        SRCS magnetic/Generic/emu.c magnetic/Glk/glk.c
-       INCLUDE_DIRS magnetic/Generic
-       C99)
+       INCLUDE_DIRS magnetic/Generic)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -327,8 +315,7 @@ if(WITH_NITFOL)
        nitfol/struct.c nitfol/objects.c nitfol/portfunc.c nitfol/hash.c
        nitfol/sound.c nitfol/graphics.c nitfol/blorb.c nitfol/main.c
        nitfol/startunix.c
-       MACROS SMART_TOKENISER DEBUGGING FAST USE_INLINE NO_TICK
-       C99)
+       MACROS SMART_TOKENISER DEBUGGING FAST USE_INLINE NO_TICK)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -355,8 +342,7 @@ if(WITH_SCARE)
        scare/scserial.c scare/scresour.c scare/scutils.c scare/scdebug.c
        scare/sclocale.c scare/scmemos.c scare/os_glk.c
        INCLUDE_DIRS ${SCARE_INCLUDE_DIRS}
-       LIBS ${SCARE_LIBS}
-       C99)
+       LIBS ${SCARE_LIBS})
 endif()
 
 # ------------------------------------------------------------------------------
