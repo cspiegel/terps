@@ -47,9 +47,7 @@ if(WITH_TADS)
   list(APPEND srcs tads3/vmconnom.cpp)
 
   set(macros GARGOYLE VMGLOB_STRUCT GLK_UNICODE GLK_TIMERS TC_TARGET_T3 RUNTIME)
-  if(LINUX)
-    list(APPEND macros GLK_ANSI_ONLY)
-  endif()
+
   if(MINGW32)
     list(APPEND macros DMSDOS DT_WIN32)
   endif()
