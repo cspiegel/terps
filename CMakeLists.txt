@@ -124,7 +124,7 @@ if(WITH_ALAN3)
        alan3/literal.c alan3/Location.c alan3/main.c alan3/memory.c 
        alan3/msg.c alan3/options.c alan3/output.c alan3/ParameterPosition.c 
        alan3/params.c alan3/parse.c alan3/readline.c alan3/reverse.c alan3/rules.c 
-       alan3/save.c alan3/scan.c alan3/score.c alan3/set.c alan3/smartall.c 
+       alan3/save.c alan3/scan.c alan3/score.c alan3/set.c
        alan3/stack.c alan3/state.c alan3/StateStack.c alan3/syntax.c alan3/sysdep.c 
        alan3/syserr.c alan3/term.c alan3/types.c alan3/utils.c 
        alan3/word.c
