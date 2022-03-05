@@ -47,11 +47,20 @@ if(WITH_TADS)
   list(APPEND srcs tads3/vmconnom.cpp)
 
   set(macros GARGOYLE VMGLOB_STRUCT GLK_UNICODE GLK_TIMERS TC_TARGET_T3 RUNTIME)
+
   if(MINGW32)
     list(APPEND macros DMSDOS DT_WIN32)
   endif()
 
   terp(tadsr
        SRCS ${srcs}
-       MACROS ${macros})
+       MACROS ${macros}
+       CXXSTD
+       POSIX)
+  if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+       # This is a style choice in the code.
+       target_compile_options(tadsr PRIVATE "-Wno-logical-not-parentheses")
+  endif()
+
+  target_include_directories(tadsr PRIVATE . tads2 tads3)
 endif()
